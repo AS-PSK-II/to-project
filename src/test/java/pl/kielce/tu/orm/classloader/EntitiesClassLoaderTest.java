@@ -16,7 +16,7 @@ class EntitiesClassLoaderTest {
 
         Set<Optional<Class<?>>> classes = entitiesClassLoader.findClasses(packageName);
 
-        assertEquals(2, classes.size());
+        assertEquals(3, classes.size());
     }
 
     @Test
@@ -26,6 +26,6 @@ class EntitiesClassLoaderTest {
 
         Set<Optional<Class<?>>> classes = entitiesClassLoader.findEntities(packageName);
 
-        assertEquals(1, classes.size());
+        assertEquals(2, classes.size());
     }
 }
