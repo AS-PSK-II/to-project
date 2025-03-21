@@ -6,23 +6,20 @@ import pl.kielce.tu.orm.classloader.EntitiesClassLoader;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseTableCreatorTest {
     @Test
-    void shouldReturnCorrectCreateTableSQLStatement() throws Exception {
-        String packageName = "pl.kielce.tu.orm.db";
+    void shouldCreateSQLStatementForEntityWithDefaultTableName() throws Exception {
+        String packageName = "pl.kielce.tu.orm.annotations.processors.db.defaultname";
         EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
-        Set<Optional<Class<?>>> classes = entitiesClassLoader.findEntities(packageName);
+        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
 
-        for (Optional<Class<?>> entity : classes) {
-            if (entity.isPresent()) {
-                DatabaseTableCreator creator = new DatabaseTableCreator(entity.get().getName());
-                Optional<String> sqlStatement = creator.getSQLStatement();
-                assertTrue(sqlStatement.isPresent());
-                assertNotNull(sqlStatement.get());
-            }
+        for (Class<?> entity : entities) {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            String sqlStatement = creator.getSQLStatement();
+            assertNotNull(sqlStatement);
+            assertEquals("CREATE TABLE IF NOT EXISTS TEST_DEFAULT_NAME (id bigint not null, name varchar(255) not null, age integer not null );", sqlStatement);
         }
 
     }

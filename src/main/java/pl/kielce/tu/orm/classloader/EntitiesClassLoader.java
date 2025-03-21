@@ -15,22 +15,24 @@ import java.util.stream.Collectors;
 public class EntitiesClassLoader {
     private static final Logger log = Logger.getLogger(EntitiesClassLoader.class.getName());
 
-    public Set<Optional<Class<?>>> findEntities(String packageName) {
-        Set<Optional<Class<?>>> classes = findClasses(packageName);
+    public Set<Class<?>> findEntities(String packageName) {
+        Set<Class<?>> classes = findClasses(packageName);
 
-        return classes.stream()
-                      .filter(entityClass -> {
-                          if (entityClass.isPresent()) {
-                              Class<?> clazz = entityClass.get();
-                              TOEntity entityAnnotation = clazz.getAnnotation(TOEntity.class);
-                              return entityAnnotation != null;
-                          }
-                          return false;
-                      })
+        return classes
+                .stream()
+                .filter(entityClass -> entityClass.getAnnotation(TOEntity.class) != null)
                 .collect(Collectors.toSet());
     }
 
-    public Set<Optional<Class<?>>> findClasses(String packageName) {
+    public Set<Class<?>> findClasses(String packageName) {
+        return getClasses(packageName)
+                .stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Optional<Class<?>>> getClasses(String packageName) {
         Set<Optional<Class<?>>> result = new HashSet<>();
 
         InputStream stream = getClass().getClassLoader()
@@ -45,7 +47,7 @@ public class EntitiesClassLoader {
         for (String line : lines) {
             if (!line.contains(".")) {
                 String newPackageName = !packageName.isEmpty() ? packageName + "." + line : line;
-                result.addAll(findClasses(newPackageName));
+                result.addAll(getClasses(newPackageName));
             } else if (line.endsWith(".class")) {
                 result.add(getClass(line, packageName));
             }

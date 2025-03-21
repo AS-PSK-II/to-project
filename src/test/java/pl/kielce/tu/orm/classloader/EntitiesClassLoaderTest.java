@@ -11,21 +11,21 @@ class EntitiesClassLoaderTest {
 
     @Test
     void shouldReadAllClassesFromPackage() {
-        String packageName = "pl.kielce.tu.orm.db";
+        String packageName = "pl.kielce.tu.orm.classloader.db";
         EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
 
-        Set<Optional<Class<?>>> classes = entitiesClassLoader.findClasses(packageName);
+        Set<Class<?>> classes = entitiesClassLoader.findClasses(packageName);
 
-        assertEquals(3, classes.size());
+        assertEquals(2, classes.size());
     }
 
     @Test
     void shouldReadAllClassesWithTOEntityAnnotation() {
-        String packageName = "pl.kielce.tu.orm.db";
+        String packageName = "pl.kielce.tu.orm.classloader.db";
         EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
 
-        Set<Optional<Class<?>>> classes = entitiesClassLoader.findEntities(packageName);
+        Set<Class<?>> classes = entitiesClassLoader.findEntities(packageName);
 
-        assertEquals(2, classes.size());
+        assertEquals(1, classes.size());
     }
 }
