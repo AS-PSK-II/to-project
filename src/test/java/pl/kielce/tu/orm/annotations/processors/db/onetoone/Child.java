@@ -1,24 +1,22 @@
-package pl.kielce.tu.orm.annotations.processors.db.defaultname;
+package pl.kielce.tu.orm.annotations.processors.db.onetoone;
 
-import pl.kielce.tu.orm.annotations.Column;
 import pl.kielce.tu.orm.annotations.Entity;
 import pl.kielce.tu.orm.annotations.Id;
+import pl.kielce.tu.orm.annotations.OneToOne;
 
 @Entity
-public class TestDefaultName {
+public class Child {
     @Id
     private Long id;
-    @Column(nullable = true, unique = true)
     private String name;
-    private Integer age;
+    @OneToOne(child = Parent.class)
+    private Parent parent;
 
-    public TestDefaultName() {
-    }
+    public Child() {}
 
-    public TestDefaultName(Long id, String name, int age) {
+    public Child(Long id, String name) {
         this.id = id;
         this.name = name;
-        this.age = age;
     }
 
     public Long getId() {
@@ -37,11 +35,11 @@ public class TestDefaultName {
         this.name = name;
     }
 
-    public int getAge() {
-        return age;
+    public Parent getParent() {
+        return parent;
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setParent(Parent parent) {
+        this.parent = parent;
     }
 }

@@ -1,5 +1,10 @@
 package pl.kielce.tu.orm.dialects;
 
+import pl.kielce.tu.orm.exceptions.UnknownTypeException;
+
+import java.time.Instant;
+import java.util.UUID;
+
 public class PostgreSQLDialect implements SQLDialect {
     @Override
     public String createTable() {
@@ -7,15 +12,38 @@ public class PostgreSQLDialect implements SQLDialect {
     }
 
     @Override
-    public String dataType(Class<?> type) {
+    public String dataType(Class<?> type) throws UnknownTypeException {
         if (String.class.equals(type)) {
-            return "varchar";
+            return "varchar(255)";
         } else if (Integer.class.equals(type)) {
-            return "int";
+            return "integer";
         } else if (Long.class.equals(type)) {
             return "bigint";
+        } else if (Boolean.class.equals(type)) {
+            return "boolean";
+        } else if (Float.class.equals(type) || Double.class.equals(type)) {
+            return "real";
+        } else if (Instant.class.equals(type)) {
+            return "timestamp";
+        } else if (UUID.class.equals(type)) {
+            return "uuid";
         } else {
-            return "";
+            throw new UnknownTypeException("Unknown type: " + type);
         }
+    }
+
+    @Override
+    public String uniqueConstraint() {
+        return "UNIQUE";
+    }
+
+    @Override
+    public String notNull() {
+        return "NOT NULL";
+    }
+
+    @Override
+    public String identity() {
+        return "bigserial PRIMARY KEY NOT NULL";
     }
 }

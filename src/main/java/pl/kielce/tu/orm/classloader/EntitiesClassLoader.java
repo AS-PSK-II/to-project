@@ -1,6 +1,8 @@
 package pl.kielce.tu.orm.classloader;
 
-import pl.kielce.tu.orm.annotations.TOEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.kielce.tu.orm.annotations.Entity;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -9,18 +11,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class EntitiesClassLoader {
-    private static final Logger log = Logger.getLogger(EntitiesClassLoader.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(EntitiesClassLoader.class.getName());
 
     public Set<Class<?>> findEntities(String packageName) {
         Set<Class<?>> classes = findClasses(packageName);
 
         return classes
                 .stream()
-                .filter(entityClass -> entityClass.getAnnotation(TOEntity.class) != null)
+                .filter(entityClass -> entityClass.getAnnotation(Entity.class) != null)
                 .collect(Collectors.toSet());
     }
 
@@ -62,7 +63,7 @@ public class EntitiesClassLoader {
                     Class.forName(packageName + "." + className.substring(0, className.lastIndexOf('.')))
             );
         } catch (ClassNotFoundException e) {
-            log.warning("Class not found: " + className);
+            log.warn("Class not found: {}", className);
         }
 
         return Optional.empty();

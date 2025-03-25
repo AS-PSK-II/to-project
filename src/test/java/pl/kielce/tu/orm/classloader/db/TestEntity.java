@@ -1,7 +1,7 @@
 package pl.kielce.tu.orm.classloader.db;
 
-import pl.kielce.tu.orm.annotations.TOEntity;
+import pl.kielce.tu.orm.annotations.Entity;
 
-@TOEntity
+@Entity
 public class TestEntity {
 }

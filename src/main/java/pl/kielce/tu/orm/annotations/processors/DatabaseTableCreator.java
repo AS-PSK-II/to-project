@@ -2,73 +2,46 @@ package pl.kielce.tu.orm.annotations.processors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.kielce.tu.orm.annotations.TOEntity;
+import pl.kielce.tu.orm.annotations.Entity;
+import pl.kielce.tu.orm.dialects.PostgreSQLDialect;
 import pl.kielce.tu.orm.dialects.SQLDialect;
-
-import java.lang.reflect.Field;
 
 public class DatabaseTableCreator {
     private static final Logger log = LoggerFactory.getLogger(DatabaseTableCreator.class);
     private final String className;
     private final SQLDialect dialect;
+    private final SQLNamesHelper sqlNamesHelper;
+
+    public DatabaseTableCreator(String className) {
+        this(className, new PostgreSQLDialect());
+    }
 
     public DatabaseTableCreator(String className, SQLDialect dialect) {
         this.className = className;
         this.dialect = dialect;
+        this.sqlNamesHelper = new SQLNamesHelper(className);
     }
 
     public String getSQLStatement() throws ClassNotFoundException {
         Class<?> entityClass = Class.forName(className);
-        TOEntity entityAnnotation = entityClass.getAnnotation(TOEntity.class);
+        Entity entityAnnotation = entityClass.getAnnotation(Entity.class);
         if (entityAnnotation == null) {
-            log.error("No @TOEntity annotation found for class: {}", className);
-            throw new IllegalStateException("No @TOEntity annotation found for class: " + className);
+            log.error("No @Entity annotation found for class: {}", className);
+            throw new IllegalStateException("No @Entity annotation found for class: " + className);
         }
 
-        Field[] fields = entityClass.getDeclaredFields();
+        String tableName = sqlNamesHelper.getTableName(entityClass, entityAnnotation.name());
+
+        DatabaseColumnCreator columnCreator = new DatabaseColumnCreator(className, tableName, dialect);
 
         StringBuilder query = new StringBuilder(dialect.createTable());
-        query.append(" CREATE TABLE ");
-        query.append(getTableName(entityClass, entityAnnotation.name()));
-        query.append(" (");
-        for (Field field : fields) {
-            query.append(getColumnDeclaration(field));
-        }
+        query.append(" ");
+        query.append(tableName);
+        query.append(" (\n");
+        query.append(columnCreator.getSQLStatement());
+        query.replace(query.length() - 2, query.length() - 1, "");
         query.append(");");
 
         return query.toString();
-    }
-
-    private String getTableName(Class<?> entityClass, String tableName) {
-        String result = tableName;
-        if (tableName == null || tableName.isBlank()) {
-            log.info("Table name is null or empty for class: {}. Use default table name", className);
-            result = toUnderscoreName(entityClass.getSimpleName());
-        }
-
-        return result.toUpperCase();
-    }
-
-    private String getColumnDeclaration(Field field) {
-        StringBuilder column = new StringBuilder();
-        column.append(toUnderscoreName(field.getName()));
-        column.append(" ");
-        column.append(field.getType().getSimpleName());
-        column.append(" ");
-        column.append("not null, ");
-        return column.toString();
-    }
-
-    private String toUnderscoreName(String name) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < name.length(); i++) {
-            char ch = name.charAt(i);
-            if (Character.isUpperCase(ch) && i > 0) {
-                result.append("_");
-            }
-            result.append(Character.toLowerCase(ch));
-        }
-
-        return result.toString();
     }
 }
