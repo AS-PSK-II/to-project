@@ -46,4 +46,19 @@ public class PostgreSQLDialect implements SQLDialect {
     public String identity() {
         return "bigserial PRIMARY KEY NOT NULL";
     }
+
+    @Override
+    public String addConstraint(String tableName, String constraintName, String foreignKeyName,
+                                String referencedTableName, String referencedColumnName) {
+        return "ALTER TABLE " + tableName +
+                " ADD CONSTRAINT " +
+                constraintName +
+                " FOREIGN KEY (" +
+                foreignKeyName +
+                ") REFERENCES " +
+                referencedTableName +
+                "(" +
+                referencedColumnName +
+                ");";
+    }
 }

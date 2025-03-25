@@ -1,6 +1,7 @@
 package pl.kielce.tu.orm.annotations.processors;
 
 import org.junit.jupiter.api.Test;
+import pl.kielce.tu.orm.cache.EntitiesWithFK;
 import pl.kielce.tu.orm.classloader.EntitiesClassLoader;
 
 import java.util.Comparator;
@@ -42,14 +43,12 @@ CREATE TABLE IF NOT EXISTS TEST_DEFAULT_NAME (
 CREATE TABLE IF NOT EXISTS CHILD (
 \tid bigserial PRIMARY KEY NOT NULL,
 \tname varchar(255) NOT NULL,
-\tparent bigint NOT NULL,
-\tCONSTRAINT fk_child_parent FOREIGN KEY (parent) REFERENCES parent (parent)
+\tparent bigint NOT NULL
 );""","""
 CREATE TABLE IF NOT EXISTS PARENT (
 \tid bigserial PRIMARY KEY NOT NULL,
 \tname varchar(255) NOT NULL,
-\tchild bigint NOT NULL,
-\tCONSTRAINT fk_parent_child FOREIGN KEY (child) REFERENCES child (child)
+\tchild bigint NOT NULL
 );"""};
 
         for (int i = 0; i < entities.size(); i++) {
@@ -59,7 +58,59 @@ CREATE TABLE IF NOT EXISTS PARENT (
             assertNotNull(sqlStatement);
             assertEquals(expectedValues[i], sqlStatement);
         }
+    }
 
+    @Test
+    void shouldAddTablesWithForeignKeysToCache() {
+        String packageName = "pl.kielce.tu.orm.annotations.processors.db.onetoone";
+        EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
+        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
+        entities.forEach(entity -> {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            try {
+                creator.getSQLStatement();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        EntitiesWithFK entitiesWithFK = EntitiesWithFK.getInstance();
+
+        assertEquals(2, entitiesWithFK.getEntities().size());
+    }
+
+    @Test
+    void shouldGenerateAddConstraintForForeignKeyTableName() throws Exception {
+        String packageName = "pl.kielce.tu.orm.annotations.processors.db.onetoone";
+        EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
+        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
+        entities.forEach(entity -> {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            try {
+                creator.getSQLStatement();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        EntitiesWithFK entitiesWithFKCache = EntitiesWithFK.getInstance();
+        List<String> entitiesWithFk = entitiesWithFKCache.getEntities()
+                                   .stream()
+                                   .sorted(Comparator.comparing(String::toString))
+                                   .toList();
+        String[] expectedValues = new String[] {"""
+ALTER TABLE CHILD ADD CONSTRAINT fk_child_parent FOREIGN KEY (parent) REFERENCES PARENT(id);""",
+                """
+ALTER TABLE PARENT ADD CONSTRAINT fk_parent_child FOREIGN KEY (child) REFERENCES CHILD(id);"""
+        };
+
+        for (int i = 0; i < entitiesWithFk.size(); i++) {
+            DatabaseForeignKeyCreator creator = new DatabaseForeignKeyCreator(entitiesWithFk.get(i));
+
+            String sqlStatement = creator.getSQLStatement();
+
+            assertNotNull(sqlStatement);
+            assertEquals(expectedValues[i], sqlStatement);
+        }
 
     }
 }

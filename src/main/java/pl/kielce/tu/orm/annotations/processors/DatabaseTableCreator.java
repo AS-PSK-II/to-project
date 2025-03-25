@@ -32,7 +32,7 @@ public class DatabaseTableCreator {
 
         String tableName = sqlNamesHelper.getTableName(entityClass, entityAnnotation.name());
 
-        DatabaseColumnCreator columnCreator = new DatabaseColumnCreator(className, tableName, dialect);
+        DatabaseColumnCreator columnCreator = new DatabaseColumnCreator(className, dialect);
 
         StringBuilder query = new StringBuilder(dialect.createTable());
         query.append(" ");
