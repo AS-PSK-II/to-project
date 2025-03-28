@@ -11,7 +11,8 @@ repositories {
 
 dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.17'
-
+    implementation 'org.slf4j:slf4j-log4j12:2.0.17'
+    implementation 'org.postgresql:postgresql:42.7.5'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

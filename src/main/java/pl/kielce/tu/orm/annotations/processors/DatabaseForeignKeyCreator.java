@@ -42,11 +42,12 @@ public class DatabaseForeignKeyCreator {
 
         for (Field field : fields) {
             if (SQLAnnotationsHelper.hasForeignTableAnnotation(field)) {
-                statement.append(getForeignKeyConstraint(field, tableName));
+                statement.append(getForeignKeyConstraint(field, tableName))
+                         .append("\n");
             }
         }
 
-        return statement.toString();
+        return statement.substring(0, statement.length() - 1);
     }
 
     private String getForeignKeyConstraint(Field field, String tableName) {
