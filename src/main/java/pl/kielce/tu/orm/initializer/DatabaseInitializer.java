@@ -2,7 +2,9 @@ package pl.kielce.tu.orm.initializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.kielce.tu.orm.annotations.processors.DatabaseForeignKeyCreator;
 import pl.kielce.tu.orm.annotations.processors.DatabaseTableCreator;
+import pl.kielce.tu.orm.cache.EntitiesWithFK;
 import pl.kielce.tu.orm.classloader.EntitiesClassLoader;
 import pl.kielce.tu.orm.config.ORMConfiguration;
 import pl.kielce.tu.orm.connector.DatabaseConnector;
@@ -25,21 +27,8 @@ public class DatabaseInitializer {
             DatabaseConnector connector = DatabaseConnector.getInstance();
             Connection dbConnection = connector.getConnection();
 
-            EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
-            Set<Class<?>> entities = entitiesClassLoader.findEntities("");
-
-            entities.forEach(entity -> {
-                DatabaseTableCreator tableCreator = new DatabaseTableCreator(entity.getName());
-                try {
-                    String query = tableCreator.getSQLStatement();
-                    Statement statement = dbConnection.createStatement();
-                    statement.executeUpdate(query);
-
-                    statement.close();
-                } catch (Exception e) {
-                    log.error("Cannot execure SQL statement for class {}", entity.getName(), e);
-                }
-            });
+            createTables(dbConnection);
+            createForeignKeys(dbConnection);
 
             try {
                 dbConnection.close();
@@ -52,6 +41,42 @@ public class DatabaseInitializer {
         } else {
             log.warn("Database is already initialized");
         }
+    }
+
+    private static void createTables(Connection dbConnection) {
+        EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
+        Set<Class<?>> entities = entitiesClassLoader.findEntities("");
+
+        entities.forEach(entity -> {
+            DatabaseTableCreator tableCreator = new DatabaseTableCreator(entity.getName());
+            try {
+                String query = tableCreator.getSQLStatement();
+                Statement statement = dbConnection.createStatement();
+                statement.executeUpdate(query);
+
+                statement.close();
+            } catch (Exception e) {
+                log.error("Cannot execute create table SQL statement for class {}", entity.getName(), e);
+            }
+        });
+    }
+
+    private static void createForeignKeys(Connection dbConnection) {
+        EntitiesWithFK fkCache = EntitiesWithFK.getInstance();
+        Set<String> entities = fkCache.getEntities();
+
+        entities.forEach(entity -> {
+            DatabaseForeignKeyCreator foreignKeyCreator = new DatabaseForeignKeyCreator(entity);
+            try {
+                String query = foreignKeyCreator.getSQLStatement();
+                Statement statement = dbConnection.createStatement();
+                statement.executeUpdate(query);
+
+                statement.close();
+            } catch (Exception e) {
+                log.error("Cannot execute add foreign key SQL statement for class {}", entity, e);
+            }
+        });
     }
 
     private static void setConfigProperties(String connectionString, String username, String password, String dbDriver) {
