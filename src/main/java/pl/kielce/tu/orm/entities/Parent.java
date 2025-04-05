@@ -9,7 +9,7 @@ public class Parent {
     @Id
     private Long id;
     private String name;
-    @OneToOne(child = Child.class)
+    @OneToOne(entity = Child.class)
     private Child child;
 
     public Parent() {}

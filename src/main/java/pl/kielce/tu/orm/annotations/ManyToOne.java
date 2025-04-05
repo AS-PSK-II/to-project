@@ -7,7 +7,8 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface OneToOne {
+public @interface ManyToOne {
     String name() default "";
     Class<?> entity() default Void.class;
+    String mappedBy() default "";
 }

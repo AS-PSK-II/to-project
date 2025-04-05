@@ -2,9 +2,7 @@ package pl.kielce.tu.orm.annotations.processors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.kielce.tu.orm.annotations.Column;
-import pl.kielce.tu.orm.annotations.Entity;
-import pl.kielce.tu.orm.annotations.OneToOne;
+import pl.kielce.tu.orm.annotations.*;
 import pl.kielce.tu.orm.dialects.PostgreSQLDialect;
 import pl.kielce.tu.orm.dialects.SQLDialect;
 
@@ -57,7 +55,7 @@ public class DatabaseForeignKeyCreator {
             log.info("No @Column annotation found for field: {}. Use default values", field.getName());
         }
 
-        Class<?> childEntityClass = getChildEntityClass(field).orElseThrow();
+        Class<?> childEntityClass = getChildEntityClass(field);
         Entity childEntityAnnotation = childEntityClass.getAnnotation(Entity.class);
 
         if (childEntityAnnotation == null) {
@@ -72,13 +70,19 @@ public class DatabaseForeignKeyCreator {
         return dialect.addConstraint(tableName, constraintName, columnName, foreignTableName, "id");
     }
 
-    private Optional<Class<?>> getChildEntityClass(Field field) {
+    private Class<?> getChildEntityClass(Field field) {
+        Optional<Class<?>> childEntityClass = Optional.empty();
         OneToOne onetoOneAnnotation = field.getAnnotation(OneToOne.class);
+        ManyToOne oneToManyAnnotation = field.getAnnotation(ManyToOne.class);
 
         if (onetoOneAnnotation != null) {
-            return Optional.of(onetoOneAnnotation.child());
+            childEntityClass = Optional.of(onetoOneAnnotation.entity());
+        } else if (oneToManyAnnotation != null) {
+            childEntityClass = Optional.of(oneToManyAnnotation.entity());
         }
 
-        return Optional.empty();
+        return childEntityClass.orElseThrow(
+                () -> new IllegalStateException("No foreign key entity found for field: " + field.getName())
+        );
     }
 }

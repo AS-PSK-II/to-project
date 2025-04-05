@@ -30,7 +30,7 @@ public class DatabaseColumnCreator {
         StringBuilder query = new StringBuilder();
 
         for (Field field : fields) {
-            query.append("\t").append(getColumnDeclaration(field));
+            query.append(getColumnDeclaration(field));
         }
 
         return query.toString();
@@ -46,30 +46,46 @@ public class DatabaseColumnCreator {
         String columnName = sqlNamesHelper.getColumnName(field, columnAnnotation != null ? columnAnnotation.name() :
                 "");
 
-        StringBuilder column = new StringBuilder();
+        StringBuilder column = new StringBuilder("\t");
         column.append(columnName);
         try {
             if (SQLAnnotationsHelper.hasIdAnnotation(field)) {
-                column.append(" ")
-                      .append(dialect.identity());
+                addIdColumn(column);
             } else if (SQLAnnotationsHelper.hasForeignTableAnnotation(field)) {
-                entitiesWithFK.addEntity(className);
-                column.append(" ")
-                      .append(dialect.dataType(Long.class))
-                      .append(" ")
-                      .append(dialect.notNull());
+                addColumnWithForeighKey(field, column);
             } else {
-                column.append(" ")
-                      .append(dialect.dataType(field.getType()))
-                      .append(" ")
-                      .append(columnAnnotation != null && columnAnnotation.nullable() ? "" : dialect.notNull())
-                      .append(columnAnnotation != null && columnAnnotation.unique() ? dialect.uniqueConstraint() : "");
+                addColumnSQLDefinition(field, column, columnAnnotation);
             }
         } catch (UnknownTypeException e) {
             log.info("Unknown type for field: {}. Start custom data type processing", field.getName());
             return "";
         }
-        column.append(",\n");
+
         return column.toString();
+    }
+
+    private void addIdColumn(StringBuilder column) {
+        column.append(" ")
+                .append(dialect.identity())
+                .append(",\n");
+    }
+
+    private void addColumnWithForeighKey(Field field, StringBuilder column) throws UnknownTypeException {
+        entitiesWithFK.addEntity(className);
+        column.append(" ")
+                .append(dialect.dataType(Long.class))
+                .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? " " + dialect.uniqueConstraint() : "")
+                .append(" ")
+                .append(dialect.notNull())
+                .append(",\n");
+    }
+
+    private void addColumnSQLDefinition(Field field, StringBuilder column, Column columnAnnotation) throws UnknownTypeException {
+        column.append(" ")
+                .append(dialect.dataType(field.getType()))
+                .append(" ")
+                .append(columnAnnotation != null && columnAnnotation.nullable() ? "" : dialect.notNull())
+                .append(columnAnnotation != null && columnAnnotation.unique() ? dialect.uniqueConstraint() : "")
+                .append(",\n");
     }
 }

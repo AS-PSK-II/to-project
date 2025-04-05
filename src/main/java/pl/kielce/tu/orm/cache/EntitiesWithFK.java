@@ -22,4 +22,8 @@ public class EntitiesWithFK {
     public void addEntity(String entity) {
         this.entities.add(entity);
     }
+
+    public void clear() {
+        entities.clear();
+    }
 }

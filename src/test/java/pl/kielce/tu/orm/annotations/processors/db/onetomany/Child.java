@@ -1,15 +1,13 @@
-package pl.kielce.tu.orm.annotations.processors.db.onetoone;
+package pl.kielce.tu.orm.annotations.processors.db.onetomany;
 
-import pl.kielce.tu.orm.annotations.Entity;
-import pl.kielce.tu.orm.annotations.Id;
-import pl.kielce.tu.orm.annotations.OneToOne;
+import pl.kielce.tu.orm.annotations.*;
 
 @Entity
 public class Child {
     @Id
     private Long id;
     private String name;
-    @OneToOne(entity = Parent.class)
+    @ManyToOne(entity = Parent.class, mappedBy = "children")
     private Parent parent;
 
     public Child() {}
