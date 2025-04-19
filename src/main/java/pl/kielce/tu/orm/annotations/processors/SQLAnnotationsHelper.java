@@ -1,6 +1,7 @@
 package pl.kielce.tu.orm.annotations.processors;
 
 import pl.kielce.tu.orm.annotations.Id;
+import pl.kielce.tu.orm.annotations.ManyToMany;
 import pl.kielce.tu.orm.annotations.ManyToOne;
 import pl.kielce.tu.orm.annotations.OneToOne;
 
@@ -19,8 +20,9 @@ public class SQLAnnotationsHelper {
     public static boolean hasForeignTableAnnotation(Field field) {
         OneToOne oneToOneAnnotation = field.getAnnotation(OneToOne.class);
         ManyToOne manyToOneAnnotation = field.getAnnotation(ManyToOne.class);
+        ManyToMany manyToManyAnnotation = field.getAnnotation(ManyToMany.class);
 
-        return oneToOneAnnotation != null || manyToOneAnnotation != null;
+        return oneToOneAnnotation != null || manyToOneAnnotation != null || manyToManyAnnotation != null;
     }
 
     public static boolean hasOneToOneAnnotation(Field field) {

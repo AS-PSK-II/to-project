@@ -3,6 +3,7 @@ package pl.kielce.tu.orm.annotations.processors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import pl.kielce.tu.orm.cache.EntitiesWithFK;
+import pl.kielce.tu.orm.cache.ManyToManyTables;
 import pl.kielce.tu.orm.classloader.EntitiesClassLoader;
 
 import java.util.Comparator;
@@ -16,6 +17,7 @@ class DatabaseTableCreatorTest {
     @AfterEach
     void cleanup() {
         EntitiesWithFK.getInstance().clear();
+        ManyToManyTables.getInstance().clear();
     }
 
     @Test
@@ -193,5 +195,82 @@ CREATE TABLE IF NOT EXISTS PARENT (
 
         assertNotNull(sqlStatement);
         assertEquals("ALTER TABLE CHILD ADD CONSTRAINT fk_child_parent FOREIGN KEY (parent) REFERENCES PARENT(id);", sqlStatement);
+    }
+
+    @Test
+    void shouldAddTablesWithManyToManyForeignKeysToCache() {
+        String packageName = "pl.kielce.tu.orm.annotations.processors.db.manytomany";
+        EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
+        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
+        entities.forEach(entity -> {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            try {
+                creator.getSQLStatement();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        ManyToManyTables manyToManyTables = ManyToManyTables.getInstance();
+
+        assertEquals(1, manyToManyTables.getColumnDefinitions().size());
+    }
+
+    @Test
+    void shouldAddTablesWithManyToManyForeignKeysToCacheOnlyOnce() {
+        String packageName = "pl.kielce.tu.orm.annotations.processors.db.manytomany";
+        EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
+        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
+        entities.forEach(entity -> {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            try {
+                creator.getSQLStatement();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        entities.forEach(entity -> {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            try {
+                creator.getSQLStatement();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        ManyToManyTables manyToManyTables = ManyToManyTables.getInstance();
+
+        assertEquals(1, manyToManyTables.getColumnDefinitions().size());
+    }
+
+    @Test
+    void shouldGenerateAdditionalTableAndAddConstraintForManyToManyForeignKeyTableName() {
+        String packageName = "pl.kielce.tu.orm.annotations.processors.db.manytomany";
+        EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
+        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
+        entities.forEach(entity -> {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
+            try {
+                creator.getSQLStatement();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        ManyToManyTables manyToManyTables = ManyToManyTables.getInstance();
+        manyToManyTables.getColumnDefinitions().forEach(columnDefinition -> {
+            ManyToManyCreator creator = new ManyToManyCreator(columnDefinition);
+
+            String sqlStatement = creator.getSQLStatement();
+
+            assertNotNull(sqlStatement);
+            assertEquals("""
+CREATE TABLE IF NOT EXISTS FIRST_ENTITY_SECOND_ENTITY (
+first_entity_id bigserial NOT NULL,
+second_entity_id bigserial NOT NULL
+);
+ALTER TABLE FIRST_ENTITY_SECOND_ENTITY ADD CONSTRAINT fk_first_entity_second_entity_first_entity FOREIGN KEY (first_entity_id) REFERENCES FIRST_ENTITY(id);
+ALTER TABLE FIRST_ENTITY_SECOND_ENTITY ADD CONSTRAINT fk_first_entity_second_entity_second_entity FOREIGN KEY (second_entity_id) REFERENCES SECOND_ENTITY(id);""", sqlStatement);
+        });
     }
 }

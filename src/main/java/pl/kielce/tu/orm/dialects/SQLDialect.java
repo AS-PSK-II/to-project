@@ -13,6 +13,8 @@ public interface SQLDialect {
 
     String identity();
 
+    String identityType();
+
     String addConstraint(String tableName, String constraintName, String foreignKeyName, String referencedTableName,
                          String referencedColumnName);
 }

@@ -3,7 +3,9 @@ package pl.kielce.tu.orm.annotations.processors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.kielce.tu.orm.annotations.Column;
+import pl.kielce.tu.orm.annotations.ManyToMany;
 import pl.kielce.tu.orm.cache.EntitiesWithFK;
+import pl.kielce.tu.orm.cache.ManyToManyTables;
 import pl.kielce.tu.orm.dialects.SQLDialect;
 import pl.kielce.tu.orm.exceptions.UnknownTypeException;
 
@@ -15,12 +17,14 @@ public class DatabaseColumnCreator {
     private final SQLDialect dialect;
     private final SQLNamesHelper sqlNamesHelper;
     private final EntitiesWithFK entitiesWithFK;
+    private final ManyToManyTables manyToManyTables;
 
     public DatabaseColumnCreator(String className, SQLDialect dialect) {
         this.className = className;
         this.dialect = dialect;
         this.sqlNamesHelper = new SQLNamesHelper(className);
         this.entitiesWithFK = EntitiesWithFK.getInstance();
+        this.manyToManyTables = ManyToManyTables.getInstance();
     }
 
     public String getSQLStatement() throws ClassNotFoundException {
@@ -52,7 +56,7 @@ public class DatabaseColumnCreator {
             if (SQLAnnotationsHelper.hasIdAnnotation(field)) {
                 addIdColumn(column);
             } else if (SQLAnnotationsHelper.hasForeignTableAnnotation(field)) {
-                addColumnWithForeighKey(field, column);
+                addColumnWithForeignKey(field, column);
             } else {
                 addColumnSQLDefinition(field, column, columnAnnotation);
             }
@@ -70,7 +74,13 @@ public class DatabaseColumnCreator {
                 .append(",\n");
     }
 
-    private void addColumnWithForeighKey(Field field, StringBuilder column) throws UnknownTypeException {
+    private void addColumnWithForeignKey(Field field, StringBuilder column) throws UnknownTypeException {
+        ManyToMany manyToManyAnnotation = field.getAnnotation(ManyToMany.class);
+        if (manyToManyAnnotation != null) {
+            addManyToManyTableToCache(manyToManyAnnotation);
+            return;
+        }
+
         entitiesWithFK.addEntity(className);
         column.append(" ")
                 .append(dialect.dataType(Long.class))
@@ -78,6 +88,14 @@ public class DatabaseColumnCreator {
                 .append(" ")
                 .append(dialect.notNull())
                 .append(",\n");
+    }
+
+    private void addManyToManyTableToCache(ManyToMany manyToManyAnnotation) {
+        try {
+            manyToManyTables.addColumnDefinition(Class.forName(className), manyToManyAnnotation.entity());
+        } catch (ClassNotFoundException e) {
+            log.error("Cannot add manyToMany table to class {}", className, e);
+        }
     }
 
     private void addColumnSQLDefinition(Field field, StringBuilder column, Column columnAnnotation) throws UnknownTypeException {

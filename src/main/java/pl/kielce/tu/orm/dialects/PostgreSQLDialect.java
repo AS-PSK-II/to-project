@@ -48,6 +48,11 @@ public class PostgreSQLDialect implements SQLDialect {
     }
 
     @Override
+    public String identityType() {
+        return "bigserial";
+    }
+
+    @Override
     public String addConstraint(String tableName, String constraintName, String foreignKeyName,
                                 String referencedTableName, String referencedColumnName) {
         return "ALTER TABLE " + tableName +
