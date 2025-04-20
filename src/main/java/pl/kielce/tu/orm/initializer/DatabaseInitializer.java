@@ -4,10 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.kielce.tu.orm.annotations.processors.DatabaseForeignKeyCreator;
 import pl.kielce.tu.orm.annotations.processors.DatabaseTableCreator;
+import pl.kielce.tu.orm.annotations.processors.ManyToManyCreator;
 import pl.kielce.tu.orm.cache.EntitiesWithFK;
+import pl.kielce.tu.orm.cache.ManyToManyTables;
 import pl.kielce.tu.orm.classloader.EntitiesClassLoader;
 import pl.kielce.tu.orm.config.ORMConfiguration;
 import pl.kielce.tu.orm.connector.DatabaseConnector;
+import pl.kielce.tu.orm.definitions.ManyToManyColumnDefinition;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -29,6 +32,7 @@ public class DatabaseInitializer {
 
             createTables(dbConnection);
             createForeignKeys(dbConnection);
+            createManyToManyReferences(dbConnection);
 
             try {
                 dbConnection.close();
@@ -75,6 +79,24 @@ public class DatabaseInitializer {
                 statement.close();
             } catch (Exception e) {
                 log.error("Cannot execute add foreign key SQL statement for class {}", entity, e);
+            }
+        });
+    }
+
+    private static void createManyToManyReferences(Connection dbConnection) {
+        ManyToManyTables manyToManyTables = ManyToManyTables.getInstance();
+        Set<ManyToManyColumnDefinition> tables = manyToManyTables.getColumnDefinitions();
+
+        tables.forEach(table -> {
+            ManyToManyCreator manyToManyCreator = new ManyToManyCreator(table);
+            try {
+                String query = manyToManyCreator.getSQLStatement();
+                Statement statement = dbConnection.createStatement();
+                statement.executeUpdate(query);
+
+                statement.close();
+            } catch (Exception e) {
+                log.error("Cannot execute create table for many to many references for classes: {} and {}", table.firstTable(), table.secondTable());
             }
         });
     }

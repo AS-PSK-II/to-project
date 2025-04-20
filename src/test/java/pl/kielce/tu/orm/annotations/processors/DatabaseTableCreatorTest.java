@@ -244,18 +244,31 @@ CREATE TABLE IF NOT EXISTS PARENT (
     }
 
     @Test
-    void shouldGenerateAdditionalTableAndAddConstraintForManyToManyForeignKeyTableName() {
+    void shouldGenerateAdditionalTableAndAddConstraintForManyToManyForeignKeyTableName() throws Exception {
         String packageName = "pl.kielce.tu.orm.annotations.processors.db.manytomany";
         EntitiesClassLoader entitiesClassLoader = new EntitiesClassLoader();
-        Set<Class<?>> entities = entitiesClassLoader.findEntities(packageName);
-        entities.forEach(entity -> {
-            DatabaseTableCreator creator = new DatabaseTableCreator(entity.getName());
-            try {
-                creator.getSQLStatement();
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        List<Class<?>> entities = entitiesClassLoader.findEntities(packageName)
+                .stream()
+                .sorted(Comparator.comparing(Class::getName))
+                .toList();
+
+        String[] expectedValues = new String[] {"""
+CREATE TABLE IF NOT EXISTS FIRST_ENTITY (
+\tid bigserial PRIMARY KEY NOT NULL,
+\tname varchar(255) NOT NULL
+);""","""
+CREATE TABLE IF NOT EXISTS SECOND_ENTITY (
+\tid bigserial PRIMARY KEY NOT NULL,
+\tname varchar(255) NOT NULL
+);"""};
+
+        for (int i = 0; i < entities.size(); i++) {
+            DatabaseTableCreator creator = new DatabaseTableCreator(entities.get(i).getName());
+            String sqlStatement = creator.getSQLStatement();
+
+            assertNotNull(sqlStatement);
+            assertEquals(expectedValues[i], sqlStatement);
+        }
 
         ManyToManyTables manyToManyTables = ManyToManyTables.getInstance();
         manyToManyTables.getColumnDefinitions().forEach(columnDefinition -> {

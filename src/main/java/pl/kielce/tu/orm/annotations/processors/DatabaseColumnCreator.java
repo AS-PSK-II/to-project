@@ -50,14 +50,17 @@ public class DatabaseColumnCreator {
         String columnName = sqlNamesHelper.getColumnName(field, columnAnnotation != null ? columnAnnotation.name() :
                 "");
 
-        StringBuilder column = new StringBuilder("\t");
-        column.append(columnName);
+        StringBuilder column = new StringBuilder();
         try {
             if (SQLAnnotationsHelper.hasIdAnnotation(field)) {
+                column.append("\t")
+                        .append(columnName);
                 addIdColumn(column);
             } else if (SQLAnnotationsHelper.hasForeignTableAnnotation(field)) {
-                addColumnWithForeignKey(field, column);
+                addColumnWithForeignKey(field, column, columnName);
             } else {
+                column.append("\t")
+                        .append(columnName);
                 addColumnSQLDefinition(field, column, columnAnnotation);
             }
         } catch (UnknownTypeException e) {
@@ -74,7 +77,7 @@ public class DatabaseColumnCreator {
                 .append(",\n");
     }
 
-    private void addColumnWithForeignKey(Field field, StringBuilder column) throws UnknownTypeException {
+    private void addColumnWithForeignKey(Field field, StringBuilder column, String columnName) throws UnknownTypeException {
         ManyToMany manyToManyAnnotation = field.getAnnotation(ManyToMany.class);
         if (manyToManyAnnotation != null) {
             addManyToManyTableToCache(manyToManyAnnotation);
@@ -82,7 +85,9 @@ public class DatabaseColumnCreator {
         }
 
         entitiesWithFK.addEntity(className);
-        column.append(" ")
+        column.append("\t")
+                .append(columnName)
+                .append(" ")
                 .append(dialect.dataType(Long.class))
                 .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? " " + dialect.uniqueConstraint() : "")
                 .append(" ")
