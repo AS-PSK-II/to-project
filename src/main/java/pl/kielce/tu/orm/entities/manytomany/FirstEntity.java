@@ -13,4 +13,28 @@ public class FirstEntity {
     private String name;
     @ManyToMany(entity = SecondEntity.class, mappedBy = "firstEntities")
     private List<SecondEntity> secondEntities;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<SecondEntity> getSecondEntities() {
+        return secondEntities;
+    }
+
+    public void setSecondEntities(List<SecondEntity> secondEntities) {
+        this.secondEntities = secondEntities;
+    }
 }

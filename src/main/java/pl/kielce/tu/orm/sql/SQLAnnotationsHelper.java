@@ -1,9 +1,6 @@
-package pl.kielce.tu.orm.annotations.processors;
+package pl.kielce.tu.orm.sql;
 
-import pl.kielce.tu.orm.annotations.Id;
-import pl.kielce.tu.orm.annotations.ManyToMany;
-import pl.kielce.tu.orm.annotations.ManyToOne;
-import pl.kielce.tu.orm.annotations.OneToOne;
+import pl.kielce.tu.orm.annotations.*;
 
 import java.lang.reflect.Field;
 
@@ -29,5 +26,17 @@ public class SQLAnnotationsHelper {
         OneToOne oneToOneAnnotation = field.getAnnotation(OneToOne.class);
 
         return oneToOneAnnotation != null;
+    }
+
+    public static boolean hasManyToManyAnnotation(Field field) {
+        ManyToMany manyToManyAnnotation = field.getAnnotation(ManyToMany.class);
+
+        return manyToManyAnnotation != null;
+    }
+
+    public static boolean hasOneToManyAnnotation(Field field) {
+        OneToMany oneToManyAnnotation = field.getAnnotation(OneToMany.class);
+
+        return oneToManyAnnotation != null;
     }
 }

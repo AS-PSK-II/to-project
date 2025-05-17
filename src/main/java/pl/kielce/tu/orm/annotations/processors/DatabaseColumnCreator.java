@@ -8,6 +8,8 @@ import pl.kielce.tu.orm.cache.EntitiesWithFK;
 import pl.kielce.tu.orm.cache.ManyToManyTables;
 import pl.kielce.tu.orm.dialects.SQLDialect;
 import pl.kielce.tu.orm.exceptions.UnknownTypeException;
+import pl.kielce.tu.orm.sql.SQLAnnotationsHelper;
+import pl.kielce.tu.orm.sql.SQLNamesHelper;
 
 import java.lang.reflect.Field;
 
@@ -91,7 +93,7 @@ public class DatabaseColumnCreator {
                 .append(dialect.dataType(Long.class))
                 .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? " " + dialect.uniqueConstraint() : "")
                 .append(" ")
-                .append(dialect.notNull())
+                .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? "" : dialect.notNull())
                 .append(",\n");
     }
 

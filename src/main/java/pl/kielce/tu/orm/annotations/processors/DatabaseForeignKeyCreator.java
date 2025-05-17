@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import pl.kielce.tu.orm.annotations.*;
 import pl.kielce.tu.orm.dialects.PostgreSQLDialect;
 import pl.kielce.tu.orm.dialects.SQLDialect;
+import pl.kielce.tu.orm.sql.SQLAnnotationsHelper;
+import pl.kielce.tu.orm.sql.SQLNamesHelper;
 
 import java.lang.reflect.Field;
 import java.util.Optional;

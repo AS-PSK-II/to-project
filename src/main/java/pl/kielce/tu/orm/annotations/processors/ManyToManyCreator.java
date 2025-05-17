@@ -6,6 +6,7 @@ import pl.kielce.tu.orm.annotations.Entity;
 import pl.kielce.tu.orm.definitions.ManyToManyColumnDefinition;
 import pl.kielce.tu.orm.dialects.PostgreSQLDialect;
 import pl.kielce.tu.orm.dialects.SQLDialect;
+import pl.kielce.tu.orm.sql.SQLNamesHelper;
 
 import java.util.*;
 import java.util.stream.Stream;

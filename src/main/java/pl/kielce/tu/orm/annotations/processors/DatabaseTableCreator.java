@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import pl.kielce.tu.orm.annotations.Entity;
 import pl.kielce.tu.orm.dialects.PostgreSQLDialect;
 import pl.kielce.tu.orm.dialects.SQLDialect;
+import pl.kielce.tu.orm.sql.SQLNamesHelper;
 
 public class DatabaseTableCreator {
     private static final Logger log = LoggerFactory.getLogger(DatabaseTableCreator.class);

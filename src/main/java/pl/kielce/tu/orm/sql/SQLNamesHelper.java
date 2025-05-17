@@ -1,4 +1,4 @@
-package pl.kielce.tu.orm.annotations.processors;
+package pl.kielce.tu.orm.sql;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -34,12 +34,6 @@ public class DatabaseInitializer {
             createForeignKeys(dbConnection);
             createManyToManyReferences(dbConnection);
 
-            try {
-                dbConnection.close();
-            } catch (Exception e) {
-                log.error("Cannot close database connection", e);
-            }
-
             isInitialized = true;
             log.info("Database is successfully initialized.");
         } else {

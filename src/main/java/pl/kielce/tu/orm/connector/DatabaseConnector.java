@@ -33,7 +33,7 @@ public final class DatabaseConnector {
     }
 
     public Connection getConnection() {
-        if (connection == null) {
+        if (connection == null || isConnectionClosed()) {
             try {
                 Constructor<?> connectionConstructor = Class.forName(dbDriver).getConstructor();
                 connectionConstructor.newInstance();
@@ -58,6 +58,18 @@ public final class DatabaseConnector {
             } catch (SQLException e) {
                 log.error("Could not close database connection", e);
             }
+        }
+    }
+
+    private boolean isConnectionClosed() {
+        if (connection == null) {
+            return true;
+        }
+        try {
+            return connection.isClosed();
+        } catch (SQLException e) {
+            log.error("Error checking if connection is closed", e);
+            return true;
         }
     }
 }
