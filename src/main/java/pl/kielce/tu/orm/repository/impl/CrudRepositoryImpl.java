@@ -136,13 +136,14 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
         String sql = SQLGenerator.generateUpdateSQL(tableName, fields, idField);
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            entity = findById((ID) idField.get(entity)).orElseThrow();
+            T dbEntity = findById((ID) idField.get(entity)).orElseThrow();
             int paramIndex = 1;
 
             for (Field field : fields) {
                 if (!field.equals(idField)) {
                     field.setAccessible(true);
                     Object value = field.get(entity);
+                    Object dbValue = field.get(dbEntity);
 
                     if (value != null) {
                         if (SQLAnnotationsHelper.hasForeignTableAnnotation(field)) {
@@ -157,6 +158,20 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
                             }
                         } else if (!SQLAnnotationsHelper.hasOneToManyAnnotation(field)) {
                             statement.setObject(paramIndex++, value);
+                        }
+                    } else if (dbValue != null) {
+                        if (SQLAnnotationsHelper.hasForeignTableAnnotation(field)) {
+                            if (SQLAnnotationsHelper.hasOneToOneAnnotation(field) || field.isAnnotationPresent(ManyToOne.class)) {
+                                Field idField = SQLGenerator.getIdField(dbValue.getClass());
+                                idField.setAccessible(true);
+                                Object idValue = idField.get(dbValue);
+
+                                if (idValue != null) {
+                                    statement.setObject(paramIndex++, idValue);
+                                }
+                            }
+                        } else if (!SQLAnnotationsHelper.hasOneToManyAnnotation(field)) {
+                            statement.setObject(paramIndex++, dbValue);
                         }
                     }
                 }
