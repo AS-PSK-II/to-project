@@ -2,6 +2,8 @@ package pl.kielce.tu.orm;
 
 import pl.kielce.tu.orm.dialects.PostgreSQLDialect;
 import pl.kielce.tu.orm.entities.*;
+import pl.kielce.tu.orm.entities.manytomany.FirstEntity;
+import pl.kielce.tu.orm.entities.manytomany.SecondEntity;
 import pl.kielce.tu.orm.initializer.DatabaseInitializer;
 import pl.kielce.tu.orm.repository.CrudRepository;
 import pl.kielce.tu.orm.repository.RepositoryFactory;
@@ -23,6 +25,8 @@ public class Runner {
         demonstrateOneToOneRelationship(repositoryFactory);
 
         demonstrateOneToManyRelationship(repositoryFactory);
+
+        demonstrateManyToManyRelationship(repositoryFactory);
     }
 
     private static void demonstrateUserRepository(RepositoryFactory repositoryFactory) {
@@ -136,6 +140,75 @@ public class Runner {
             System.out.println("Found product: " + p.getName());
             if (p.getInvoice() != null) {
                 System.out.println("Product's invoice: " + p.getInvoice().getNumber());
+            }
+        });
+
+        System.out.println();
+    }
+
+    private static void demonstrateManyToManyRelationship(RepositoryFactory repositoryFactory) {
+        System.out.println("=== Demonstrating Many-to-Many Relationship ===");
+
+        // Get repositories
+        CrudRepository<FirstEntity, Long> firstEntityRepository = repositoryFactory.getRepositoryForEntity(FirstEntity.class);
+        CrudRepository<SecondEntity, Long> secondEntityRepository = repositoryFactory.getRepositoryForEntity(SecondEntity.class);
+
+        // Create and save entities
+        FirstEntity first1 = new FirstEntity();
+        first1.setId(1L);
+        first1.setName("First Entity 1");
+
+        FirstEntity first2 = new FirstEntity();
+        first2.setId(2L);
+        first2.setName("First Entity 2");
+
+        SecondEntity second1 = new SecondEntity();
+        second1.setId(1L);
+        second1.setName("Second Entity 1");
+
+        SecondEntity second2 = new SecondEntity();
+        second2.setId(2L);
+        second2.setName("Second Entity 2");
+
+        // Set up relationships
+        List<SecondEntity> secondEntities1 = new ArrayList<>();
+        secondEntities1.add(second1);
+        first1.setSecondEntities(secondEntities1);
+
+        List<SecondEntity> secondEntities2 = new ArrayList<>();
+        secondEntities2.add(second1);
+        secondEntities2.add(second2);
+        first2.setSecondEntities(secondEntities2);
+
+        List<FirstEntity> firstEntities1 = new ArrayList<>();
+        firstEntities1.add(first1);
+        firstEntities1.add(first2);
+        second1.setFirstEntities(firstEntities1);
+
+        List<FirstEntity> firstEntities2 = new ArrayList<>();
+        firstEntities2.add(first2);
+        second2.setFirstEntities(firstEntities2);
+
+        // Save entities
+        firstEntityRepository.save(first1);
+        firstEntityRepository.save(first2);
+
+        // Find entities
+        Optional<FirstEntity> foundFirst = firstEntityRepository.findById(1L);
+        foundFirst.ifPresent(f -> {
+            System.out.println("Found first entity: " + f.getName());
+            if (f.getSecondEntities() != null) {
+                System.out.println("First entity's second entities: " + f.getSecondEntities().size());
+                f.getSecondEntities().forEach(s -> System.out.println("- " + s.getName()));
+            }
+        });
+
+        Optional<SecondEntity> foundSecond = secondEntityRepository.findById(1L);
+        foundSecond.ifPresent(s -> {
+            System.out.println("Found second entity: " + s.getName());
+            if (s.getFirstEntities() != null) {
+                System.out.println("Second entity's first entities: " + s.getFirstEntities().size());
+                s.getFirstEntities().forEach(f -> System.out.println("- " + f.getName()));
             }
         });
 
