@@ -92,8 +92,7 @@ public class DatabaseColumnCreator {
                 .append(" ")
                 .append(dialect.dataType(Long.class))
                 .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? " " + dialect.uniqueConstraint() : "")
-                .append(" ")
-                .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? "" : dialect.notNull())
+                .append(SQLAnnotationsHelper.hasOneToOneAnnotation(field) ? "" : " " + dialect.notNull())
                 .append(",\n");
     }
 

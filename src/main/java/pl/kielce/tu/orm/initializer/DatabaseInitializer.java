@@ -11,6 +11,7 @@ import pl.kielce.tu.orm.classloader.EntitiesClassLoader;
 import pl.kielce.tu.orm.config.ORMConfiguration;
 import pl.kielce.tu.orm.connector.DatabaseConnector;
 import pl.kielce.tu.orm.definitions.ManyToManyColumnDefinition;
+import pl.kielce.tu.orm.dialects.SQLDialect;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -19,12 +20,14 @@ import java.util.Set;
 public class DatabaseInitializer {
     private static final Logger log = LoggerFactory.getLogger(DatabaseInitializer.class);
     private static boolean isInitialized = false;
+    private static SQLDialect sqlDialect;
 
     private DatabaseInitializer() {}
 
-    public static void initialize(String connectionString, String username, String password, String dbDriver) {
+    public static void initialize(String connectionString, String username, String password, String dbDriver, SQLDialect sqlDialectParam) {
         if (!isInitialized) {
             log.info("Initializing Database...");
+            sqlDialect = sqlDialectParam;
 
             setConfigProperties(connectionString, username, password, dbDriver);
             DatabaseConnector connector = DatabaseConnector.getInstance();
@@ -46,7 +49,7 @@ public class DatabaseInitializer {
         Set<Class<?>> entities = entitiesClassLoader.findEntities("");
 
         entities.forEach(entity -> {
-            DatabaseTableCreator tableCreator = new DatabaseTableCreator(entity.getName());
+            DatabaseTableCreator tableCreator = new DatabaseTableCreator(entity.getName(), sqlDialect);
             try {
                 String query = tableCreator.getSQLStatement();
                 Statement statement = dbConnection.createStatement();
@@ -64,7 +67,7 @@ public class DatabaseInitializer {
         Set<String> entities = fkCache.getEntities();
 
         entities.forEach(entity -> {
-            DatabaseForeignKeyCreator foreignKeyCreator = new DatabaseForeignKeyCreator(entity);
+            DatabaseForeignKeyCreator foreignKeyCreator = new DatabaseForeignKeyCreator(entity, sqlDialect);
             try {
                 String query = foreignKeyCreator.getSQLStatement();
                 Statement statement = dbConnection.createStatement();
@@ -82,7 +85,7 @@ public class DatabaseInitializer {
         Set<ManyToManyColumnDefinition> tables = manyToManyTables.getColumnDefinitions();
 
         tables.forEach(table -> {
-            ManyToManyCreator manyToManyCreator = new ManyToManyCreator(table);
+            ManyToManyCreator manyToManyCreator = new ManyToManyCreator(table, sqlDialect);
             try {
                 String query = manyToManyCreator.getSQLStatement();
                 Statement statement = dbConnection.createStatement();

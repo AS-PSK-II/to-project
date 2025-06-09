@@ -52,12 +52,12 @@ CREATE TABLE IF NOT EXISTS TEST_DEFAULT_NAME (
 CREATE TABLE IF NOT EXISTS CHILD (
 \tid bigserial PRIMARY KEY NOT NULL,
 \tname varchar(255) NOT NULL,
-\tparent bigint UNIQUE NOT NULL
+\tparent bigint UNIQUE
 );""","""
 CREATE TABLE IF NOT EXISTS PARENT (
 \tid bigserial PRIMARY KEY NOT NULL,
 \tname varchar(255) NOT NULL,
-\tchild bigint UNIQUE NOT NULL
+\tchild bigint UNIQUE
 );"""};
 
         for (int i = 0; i < entities.size(); i++) {

@@ -136,6 +136,7 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
         String sql = SQLGenerator.generateUpdateSQL(tableName, fields, idField);
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            entity = findById((ID) idField.get(entity)).orElseThrow();
             int paramIndex = 1;
 
             for (Field field : fields) {
@@ -632,7 +633,6 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
             SQLNamesHelper sqlNamesHelper = new SQLNamesHelper(entityClass.getName());
             SQLNamesHelper targetSqlNamesHelper = new SQLNamesHelper(targetEntityClass.getName());
 
-            String entityTableName = sqlNamesHelper.getTableName(entityClass, entityAnnotation.name());
             String targetTableName = targetSqlNamesHelper.getTableName(targetEntityClass, targetEntityAnnotation.name());
 
             Field targetReferenceField = null;
@@ -650,7 +650,7 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
                 Connection connection = databaseConnector.getConnection();
                 String columnName = sqlNamesHelper.getColumnName(targetReferenceField, "");
                 String querySQL = "SELECT id FROM " + targetTableName + 
-                                 " WHERE " + entityTableName.toLowerCase() + "_id = ?";
+                                 " WHERE " + columnName + " = ?";
 
                 Object targetId = null;
                 try (PreparedStatement statement = connection.prepareStatement(querySQL)) {
@@ -707,8 +707,6 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
             }
         } catch (NoSuchMethodException | InstantiationException | InvocationTargetException e) {
             throw new RuntimeException("Error loading one-to-one relationship", e);
-        } finally {
-            PROCESSED_ENTITIES.get().remove(entity);
         }
     }
 
@@ -780,8 +778,6 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
             field.set(entity, relatedEntities);
         } catch (NoSuchMethodException | InstantiationException | InvocationTargetException e) {
             throw new RuntimeException("Error loading one-to-many relationship", e);
-        } finally {
-            PROCESSED_ENTITIES.get().remove(entity);
         }
     }
 
@@ -892,8 +888,6 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
             }
         } catch (NoSuchMethodException | InstantiationException | InvocationTargetException e) {
             throw new RuntimeException("Error loading many-to-one relationship", e);
-        } finally {
-            PROCESSED_ENTITIES.get().remove(entity);
         }
     }
 
@@ -957,8 +951,6 @@ public class CrudRepositoryImpl<T, ID> implements CrudRepository<T, ID> {
             field.set(entity, relatedEntities);
         } catch (NoSuchMethodException | InstantiationException | InvocationTargetException e) {
             throw new RuntimeException("Error loading many-to-many relationship", e);
-        } finally {
-            PROCESSED_ENTITIES.get().remove(entity);
         }
     }
 
